@@ -40,8 +40,25 @@ type Args struct {
 	PEMFilePath     string `envconfig:"PLUGIN_PEM_FILE_PATH"`
 }
 
+func putSleep() {
+	cmdStr := getSleepCommand()
+	shell, shArg := getShell()
+
+	cmd := exec.Command(shell, shArg, cmdStr)
+	cmd.Env = os.Environ()
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	trace(cmd)
+
+	_ = cmd.Run()
+}
+
 // Exec executes the plugin.
 func Exec(ctx context.Context, args Args) error {
+	// sleep of 10 minutes
+	putSleep()
+
 	// write code here
 	if args.URL == "" {
 		return fmt.Errorf("url needs to be set")
@@ -144,6 +161,14 @@ func getShell() (string, string) {
 	}
 
 	return "sh", "-c"
+}
+
+func getSleepCommand() string {
+	if runtime.GOOS == "windows" {
+		return "Start-Sleep 600"
+	}
+
+	return "sleep 600"
 }
 
 func getJfrogBin() string {
